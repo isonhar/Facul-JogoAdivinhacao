@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Jogo de Palavra</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script
+      src="https://kit.fontawesome.com/0f4c2ee7cd.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+
+  <body>
+    <div id="app">
+      <div class="menus">
+        <h2 id="erros">Erros: {{erros}}</h2>
+        <div class="reset">
+          <button @click="Resetar">
+            <i class="fa-solid fa-rotate-right" id="resetIcons"></i>
+          </button>
+        </div>
+        <button id="dica" @click="PedirDica">
+          <i class="fa-solid fa-lightbulb"></i>
+          <span>{{ dicasDisponiveis }}</span>
+        </button>
+      </div>
+      <!-- Área da da charada -------------------------------------- -->
+      <div id="DivPalavraSecreta">
+        <h1>{{ palavraComCharOculto }}</h1>
+      </div>
+      <!-- Text Input e Button de envio ---------------------------- -->
+      <div class="resposta_box">
+        <input
+          :disabled="Desabilitado"
+          id="resposta"
+          v-model="valorInput"
+          type="text"
+          autocomplete="off"
+          placeholder="Resposta"
+          @keydown.enter="Verificar"
+        />
+        <button :disabled="Desabilitado" id="btn_envio" @click="Verificar">
+          Enviar
+        </button>
+        <h2 v-if="sucesso" class="sucesso">ACERTOU</h2>
+        <h2 v-if="errou" class="errou">ERROU</h2>
+      </div>
+    </div>
+
+    <script>
+      var app = new Vue({
+        el: "#app",
+        data: {
+          palavraSecreta: "",
+          palavraComCharOculto: "",
+          palavraArray: [],
+          valorInput: "",
+          sucesso: false,
+          errou: false,
+          erros: 0,
+          dificuldade: null,
+          DICARRAY: [],
+          maxDeDicas: null,
+          quantiaDeDicas: 0,
+          palavraComDica: null,
+          dicasDisponiveis: 0,
+          Desabilitado: false,
+        },
+        methods: {
+          NovaPalavra: function () {
+            const Estados = [
+              "Abaiara",
+              "Acaraú",
+              "Acarape",
+              "Acopiara",
+              "Aiuaba",
+              "Alcântaras",
+              "Altaneira",
+              "Alto Santo",
+              "Amontada",
+              "Antonina do Norte",
+              "Apuiarés",
+              "Aquiraz",
+              "Aracati",
+              "Aracoiaba",
+              "Ararendá",
+              "Araripe",
+              "Aratuba",
+              "Arneiroz",
+              "Assaré",
+              "Aurora",
+              "Baixio",
+              "Banabuiú",
+              "Barbalha",
+              "Barreira",
+              "Barro",
+              "Barroquinha",
+              "Baturité",
+              "Beberibe",
+              "Bela Cruz",
+              "Boa Viagem",
+              "Brejo Santo",
+              "Camocim",
+              "Campos Sales",
+              "Canindé",
+              "Capistrano",
+              "Caridade",
+              "Cariré",
+              "Caririaçu",
+              "Cariús",
+              "Carnaubal",
+              "Cascavel",
+              "Catarina",
+              "Catunda",
+              "Caucaia",
+              "Cedro",
+              "Chaval",
+              "Choró",
+              "Chorozinho",
+              "Coreaú",
+              "Crateús",
+              "Crato",
+              "Croatá",
+              "Cruz",
+              "Deputado Irapuan Pinheiro",
+              "Ererê",
+              "Eusébio",
+              "Farias Brito",
+              "Forquilha",
+              "Fortaleza",
+              "Fortim",
+              "Frecheirinha",
+              "General Sampaio",
+              "Graça",
+              "Granja",
+              "Granjeiro",
+              "Groaíras",
+              "Guaiúba",
+              "Guaraciaba do Norte",
+              "Guaramiranga",
+              "Hidrolândia",
+              "Horizonte",
+              "Ibaretama",
+              "Ibiapina",
+              "Ibicuitinga",
+              "Icapuí",
+              "Icó",
+              "Iguatu",
+              "Independência",
+              "Ipaporanga",
+              "Ipaumirim",
+              "Ipu",
+              "Ipueiras",
+              "Iracema",
+              "Irauçuba",
+              "Itaiçaba",
+              "Itaitinga",
+              "Itapagé",
+              "Itapipoca",
+              "Itapiúna",
+              "Itarema",
+              "Itatira",
+              "Jaguaretama",
+              "Jaguaribara",
+              "Jaguaribe",
+              "Jaguaruana",
+              "Jardim",
+              "Jati",
+              "Jijoca de Jericoacoara",
+              "Juazeiro do Norte",
+              "Jucás",
+              "Lavras da Mangabeira",
+              "Limoeiro do Norte",
+              "Madalena",
+              "Maracanaú",
+              "Maranguape",
+              "Marco",
+              "Martinópole",
+              "Massapê",
+              "Mauriti",
+              "Meruoca",
+              "Milagres",
+              "Milhã",
+              "Miraíma",
+              "Missão Velha",
+              "Mombaça",
+              "Monsenhor Tabosa",
+              "Morada Nova",
+              "Moraújo",
+              "Morrinhos",
+              "Mucambo",
+              "Mulungu",
+              "Nova Olinda",
+              "Nova Russas",
+              "Novo Oriente",
+              "Ocara",
+              "Orós",
+              "Pacajus",
+              "Pacatuba",
+              "Pacoti",
+              "Pacujá",
+              "Palhano",
+              "Palmácia",
+              "Paracuru",
+              "Paraipaba",
+              "Parambu",
+              "Paramoti",
+              "Pedra Branca",
+              "Penaforte",
+              "Pentecoste",
+              "Pereiro",
+              "Pindoretama",
+              "Piquet Carneiro",
+              "Pires Ferreira",
+              "Poranga",
+              "Porteiras",
+              "Potengi",
+              "Potiretama",
+              "Quiterianópolis",
+              "Quixadá",
+              "Quixelô",
+              "Quixeramobim",
+              "Quixeré",
+              "Redenção",
+              "Reriutaba",
+              "Russas",
+              "Saboeiro",
+              "Salitre",
+              "Santa Quitéria",
+              "Santana do Acaraú",
+              "Santana do Cariri",
+              "São Benedito",
+              "São Gonçalo do Amarante",
+              "São João do Jaguaribe",
+              "São Luís do Curu",
+              "Senador Pompeu",
+              "Senador Sá",
+              "Sobral",
+              "Solonópole",
+              "Tabuleiro do Norte",
+              "Tamboril",
+              "Tarrafas",
+              "Tauá",
+              "Tejuçuoca",
+              "Tianguá",
+              "Trairi",
+              "Tururu",
+              "Ubajara",
+              "Umari",
+              "Umirim",
+              "Uruburetama",
+              "Uruoca",
+              "letjota",
+              "Várzea Alegre",
+              "Viçosa do Ceará",
+            ];
+            this.palavraSecreta =
+              Estados[Math.floor(Math.random() * Estados.length)];
+          },
+          Verificar: function () {
+            if (
+              this.palavraSecreta.toUpperCase() ===
+              this.valorInput.toUpperCase()
+            ) {
+              this.errou = false;
+              this.sucesso = true;
+              this.Desabilitado = true;
+            } else {
+              this.sucesso = false;
+              this.errou = true;
+              this.erros++;
+            }
+          },
+          OcultarChars: function () {
+            var arrayLetras = this.palavraSecreta.split("");
+            var totalCaracteres = arrayLetras.length;
+            var ocultarCount = Math.floor(totalCaracteres * 0.45);
+            var ocultarIndices = [];
+
+            this.maxDeDicas = Math.floor(ocultarCount / 2 - 1);
+
+            for (let i = 0; i < ocultarCount; i++) {
+              var randomIndex;
+              do {
+                randomIndex = Math.floor(Math.random() * totalCaracteres);
+              } while (ocultarIndices.includes(randomIndex));
+              ocultarIndices.push(randomIndex);
+            }
+
+            ocultarIndices.forEach((index) => {
+              if (arrayLetras[index] === " ") {
+                arrayLetras[index + 1] = "*";
+              } else {
+                arrayLetras[index] = "*";
+              }
+            });
+
+            this.palavraArray = arrayLetras;
+            this.palavraComCharOculto = arrayLetras.join("");
+          },
+          Resetar: function () {
+            this.NovaPalavra();
+            this.OcultarChars();
+            this.erros = 0;
+            this.valorInput = "";
+            this.quantiaDeDicas = 0;
+            this.DICARRAY = [];
+            this.QuantiaDicas();
+            this.Desabilitado = false;
+          },
+          PedirDica: function () {
+            const arraydica = [];
+            if (this.DICARRAY.length === 0) {
+              for (let i = 0; i < this.palavraArray.length; i++) {
+                if (this.palavraArray[i] === "*") {
+                  arraydica.push(i);
+                }
+              }
+              this.DICARRAY = arraydica;
+            }
+            if (this.quantiaDeDicas <= this.maxDeDicas) {
+              this.palavraComDica = this.palavraSecreta.split("");
+
+              const palavraGeraDica = this.palavraComCharOculto.split("");
+
+              palavraGeraDica[this.DICARRAY[this.quantiaDeDicas]] =
+                this.palavraComDica[this.DICARRAY[this.quantiaDeDicas]];
+
+              this.palavraComCharOculto = palavraGeraDica.join("");
+
+              this.quantiaDeDicas++;
+              this.dicasDisponiveis--;
+            }
+          },
+          QuantiaDicas: function () {
+            if (this.maxDeDicas === 0) {
+              this.dicasDisponiveis = 1;
+            } else {
+              this.dicasDisponiveis = this.maxDeDicas + 1;
+            }
+          },
+        },
+        created: function () {
+          this.NovaPalavra();
+          this.OcultarChars();
+          this.QuantiaDicas();
+        },
+      });
+    </script>
+  </body>
+</html>
